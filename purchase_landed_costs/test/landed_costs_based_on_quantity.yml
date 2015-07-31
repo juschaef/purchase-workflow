@@ -128,17 +128,19 @@
   Reception is ready for process, make it and check moves value
 -
   !python {model: stock.partial.picking}: |
+    from nose.tools import *
+
     pick_ids = self.pool.get('purchase.order').browse(cr, uid, ref("purchase_order_lcost_01")).picking_ids
     partial_id = self.create(cr, uid, {},context={'active_model': 'stock.picking','active_ids': [pick_ids[0].id]})
     self.do_partial(cr, uid, [partial_id])
     picking = self.pool.get('stock.picking').browse(cr, uid, [pick_ids[0].id])[0]
     for move in picking.move_lines:
       if move.product_id.name == 'Wine A':
-        assert move.price_unit == 102.5,"Technical field price_unit of Wine A stock move should record the landed_costs, not purchase price"
-        assert move.price_unit_net == 100.0,"Technical field price_unit of Wine A stock move should record the purchase price"
+        assert_almost_equal(move.price_unit, 102.5, msg="Technical field price_unit of Wine A stock move should record the landed_costs, not purchase price")
+        assert_almost_equal(move.price_unit_net, 100.0, msg="Technical field price_unit of Wine A stock move should record the purchase price")
       elif move.product_id.name == 'Wine B':
-        assert move.price_unit == 202.5,"Technical field price_unit of Wine B stock move should record the landed_costs, not purchase price"
-        assert move.price_unit_net == 200.0,"Technical field price_unit_net of Wine B stock move should record the purchase price"
+        assert_almost_equal(move.price_unit, 202.5, msg="Technical field price_unit of Wine B stock move should record the landed_costs, not purchase price")
+        assert_almost_equal(move.price_unit_net, 200.0, msg="Technical field price_unit_net of Wine B stock move should record the purchase price")
 -
   I check that purchase order is shipped.
 -
@@ -148,9 +150,13 @@
   I check that avg price of products is computed with landed costs
 -
   !python {model: product.product}: |
-     # computed as : ((15/20) * 50 + 100 * 15) / 15
-     value_a = 102.5
-     # computed as : ((5/20) * 50 + 200 * 5) / 5
-     value_b = 202.5
-     assert self.browse(cr, uid, ref("product_product_a_avg_01")).standard_price == value_a,"Avg price for product Wine A is wrongly computed"
-     assert self.browse(cr, uid, ref("product_product_b_avg_01")).standard_price == value_b,"Avg price for product Wine B is wrongly computed"
+     from nose.tools import *
+
+     product_a = self.browse(cr, uid, ref("product_product_a_avg_01"))
+     product_b = self.browse(cr, uid, ref("product_product_b_avg_01"))
+
+     expected_a = 102.5  # computed as : ((15/20) * 50 + 100 * 15) / 15
+     expected_b = 202.5  # computed as : ((5/20) * 50 + 200 * 5) / 5
+
+     assert_almost_equal(product_a.standard_price, expected_a)
+     assert_almost_equal(product_b.standard_price, expected_b)
