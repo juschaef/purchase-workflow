@@ -8,6 +8,7 @@
     ],
     "demo": [],
     "data": [
+        'view/purchase.xml',
     ],
     "installable": True
 }
