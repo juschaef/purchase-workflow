@@ -1,2 +1,1 @@
 from openerp import tests
-
